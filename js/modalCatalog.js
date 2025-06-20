@@ -7,15 +7,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let images = Array.from(document.querySelectorAll("img[data-src]"));
   let currentIndex = 0;
+  let modalOpen = false;
 
   function openModal(src, index) {
     modalImage.src = src;
     modal.classList.remove("hidden");
     currentIndex = index;
+    modalOpen = true;
+
+    // Empuja un nuevo estado al historial para interceptar el botón "atrás"
+    history.pushState({ modal: true }, null, "");
   }
 
   function closeModal() {
-    modal.classList.add("hidden");
+    if (modalOpen) {
+      modal.classList.add("hidden");
+      modalOpen = false;
+
+      // Retrocede el historial solo si fue modificado
+      if (history.state && history.state.modal) {
+        history.back();
+      }
+    }
   }
 
   function showImage(index) {
@@ -32,13 +45,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Botones para escritorio
   closeModalBtn?.addEventListener("click", closeModal);
   prevBtn?.addEventListener("click", () => showImage(currentIndex - 1));
   nextBtn?.addEventListener("click", () => showImage(currentIndex + 1));
 
-  // Cierre tocando fuera en móviles
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
+  });
+
+  // Escucha el evento popstate (cuando el usuario presiona "atrás")
+  window.addEventListener("popstate", () => {
+    if (modalOpen) {
+      closeModal();
+    }
   });
 });
